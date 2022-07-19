@@ -10,6 +10,11 @@ public class TemplateController {
 
     @GetMapping("login")
     public String getLogin(){
-        return "login";
+        return "login"; //same route name
+    }
+
+    @GetMapping("courses")
+    public String getCourses(){
+        return "courses";
     }
 }
