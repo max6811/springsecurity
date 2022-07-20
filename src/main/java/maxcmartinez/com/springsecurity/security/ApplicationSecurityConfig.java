@@ -1,25 +1,20 @@
 package maxcmartinez.com.springsecurity.security;
 
+import maxcmartinez.com.springsecurity.auth.ApplicationUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.util.concurrent.TimeUnit;
 
-import static maxcmartinez.com.springsecurity.security.ApplicationUserPermission.*;
 import static maxcmartinez.com.springsecurity.security.ApplicatoinUserRole.*;
 
 @Configuration
@@ -28,10 +23,12 @@ import static maxcmartinez.com.springsecurity.security.ApplicatoinUserRole.*;
 public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationUserService applicationUserService;
 
     @Autowired
-    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder) {
+    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder, ApplicationUserService applicationUserService) {
         this.passwordEncoder = passwordEncoder;
+        this.applicationUserService = applicationUserService;
     }
 
     @Override
@@ -72,31 +69,45 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
         }
 
     @Override
-    @Bean
-    protected UserDetailsService userDetailsService() {
-        UserDetails maxcmUser = User.builder()
-                .username("maxcm")
-                .password(passwordEncoder.encode("Jup123"))
-//                .roles(STUDENT.name())
-                .authorities(STUDENT.getGrantedAuthorities())
-                .build();
-        UserDetails lindaUser = User.builder()
-                .username("linda")
-                .password(passwordEncoder.encode("Jup123"))
-//                .roles(ADMIN.name())
-                .authorities(ADMIN.getGrantedAuthorities())
-                .build();
-        UserDetails tomUser = User.builder()
-                .username("tom")
-                .password(passwordEncoder.encode("Jup123"))
-//                .roles(ADMINTRAINEE.name())
-                .authorities(ADMINTRAINEE.getGrantedAuthorities())
-                .build();
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(daoAuthenticationProvider());    }
 
-        return new InMemoryUserDetailsManager(
-                maxcmUser,
-                lindaUser,
-                tomUser
-        );
-    }
+    @Bean
+        public DaoAuthenticationProvider daoAuthenticationProvider(){
+            DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+            provider.setPasswordEncoder(passwordEncoder);
+            provider.setUserDetailsService(applicationUserService);
+            return provider;
+        }
+
+        //***************** DELETE THIS METHOS FOR MODULE DATABASE IMPLEMENT ******************************
+
+//    @Override
+//    @Bean
+//    protected UserDetailsService userDetailsService() {
+//        UserDetails maxcmUser = User.builder()
+//                .username("maxcm")
+//                .password(passwordEncoder.encode("Jup123"))
+////                .roles(STUDENT.name())
+//                .authorities(STUDENT.getGrantedAuthorities())
+//                .build();
+//        UserDetails lindaUser = User.builder()
+//                .username("linda")
+//                .password(passwordEncoder.encode("Jup123"))
+////                .roles(ADMIN.name())
+//                .authorities(ADMIN.getGrantedAuthorities())
+//                .build();
+//        UserDetails tomUser = User.builder()
+//                .username("tom")
+//                .password(passwordEncoder.encode("Jup123"))
+////                .roles(ADMINTRAINEE.name())
+//                .authorities(ADMINTRAINEE.getGrantedAuthorities())
+//                .build();
+//
+//        return new InMemoryUserDetailsManager(
+//                maxcmUser,
+//                lindaUser,
+//                tomUser
+//        );
+//    }
 }
